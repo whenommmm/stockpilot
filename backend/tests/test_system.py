@@ -30,3 +30,5 @@ def test_metrics_exposes_http_and_inventory_metrics(client, make_product):
     assert "http_requests_total" in response.text
     assert "stockpilot_out_of_stock_products 1.0" in response.text
     assert "stockpilot_low_stock_products 1.0" in response.text
+    for reason in ("RESTOCK", "SALE", "ADJUSTMENT"):  # exported before any adjustment happens
+        assert f'stockpilot_units_moved_total{{reason="{reason}"}}' in response.text

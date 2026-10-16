@@ -2,6 +2,7 @@
 
 import logging
 from collections.abc import Iterator
+from typing import get_args
 
 from prometheus_client import REGISTRY, Counter
 from prometheus_client.core import GaugeMetricFamily, Metric
@@ -10,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from .db import SessionLocal
 from .inventory import summarise
+from .schemas import Reason
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +21,12 @@ STOCK_ADJUSTMENTS = Counter(
 UNITS_MOVED = Counter(
     "stockpilot_units_moved_total", "Units moved in or out of stock, by reason", ["reason"]
 )
+
+# Export every reason at 0 from start-up, so dashboards and rate() see a series before the
+# first adjustment instead of "No data".
+for _reason in get_args(Reason):
+    STOCK_ADJUSTMENTS.labels(reason=_reason)
+    UNITS_MOVED.labels(reason=_reason)
 
 
 def record_adjustment(reason: str, change: int) -> None:

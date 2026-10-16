@@ -426,6 +426,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "reqps",
+          "min": 0,
           "custom": {
             "lineWidth": 2,
             "fillOpacity": 12,
@@ -479,6 +480,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "s",
+          "min": 0,
           "custom": {
             "lineWidth": 2,
             "fillOpacity": 12,
@@ -532,13 +534,15 @@
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
+          "min": 0,
           "custom": {
             "lineWidth": 2,
             "fillOpacity": 12,
             "showPoints": "never",
             "stacking": {
               "mode": "none"
-            }
+            },
+            "axisSoftMax": 0.1
           }
         },
         "overrides": []
@@ -585,6 +589,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "none",
+          "min": 0,
           "custom": {
             "lineWidth": 2,
             "fillOpacity": 12,
@@ -638,6 +643,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "none",
+          "min": 0,
           "custom": {
             "lineWidth": 2,
             "fillOpacity": 12,
@@ -711,6 +717,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "none",
+          "min": 0,
           "custom": {
             "lineWidth": 2,
             "fillOpacity": 12,
@@ -764,6 +771,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "none",
+          "min": 0,
           "custom": {
             "lineWidth": 2,
             "fillOpacity": 12,
