@@ -36,7 +36,8 @@ crash.log
 # kind provider writes the cluster kubeconfig (with a client key) next to the Terraform files
 terraform/local/*-config
 
-# Submission evidence (contains AWS account details)
-evidence/
+# Submission evidence: raw Terraform logs contain the AWS account ID; the GHCR shot shows a stale contributor cache
+evidence/*.txt
+evidence/M5-ghcr-backend-package.png
 *.tfplan
 tfplan
