@@ -53,7 +53,6 @@ export default function ProductTable({
           <thead>
             <tr>
               <th>Product</th>
-              <th>Category</th>
               <th className="num">Stock</th>
               <th className="num">Unit price</th>
               <th className="num">Value</th>
@@ -69,13 +68,11 @@ export default function ProductTable({
                 <td>
                   <div className="product-cell">
                     <strong>{product.name}</strong>
-                    <span>
-                      <code>{product.sku}</code>
-                      {product.supplier && ` · ${product.supplier}`}
+                    <span title={product.supplier || undefined}>
+                      <code>{product.sku}</code> · {titleCase(product.category)}
                     </span>
                   </div>
                 </td>
-                <td>{titleCase(product.category)}</td>
                 <td className="num">
                   <StockLevel product={product} />
                 </td>
