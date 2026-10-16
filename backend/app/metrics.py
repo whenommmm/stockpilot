@@ -40,8 +40,9 @@ class InventoryCollector(Collector):
         try:
             with SessionLocal() as db:
                 summary = summarise(db)
-        except SQLAlchemyError:
-            logger.warning("Skipping inventory metrics: database unavailable", exc_info=True)
+        except SQLAlchemyError as exc:
+            # One line per scrape, not a stack trace: Prometheus scrapes every 15 seconds.
+            logger.warning("Inventory metrics skipped, DB unavailable: %s", type(exc).__name__)
             return
         gauges = {
             "stockpilot_products": ("Products in the catalogue", "total_products"),
