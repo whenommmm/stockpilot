@@ -1,0 +1,66 @@
+# Full local stack:  docker compose up --build   →  http://localhost:3000
+# Start-up order is enforced with health checks, so a fresh (empty) database never races the API:
+#   postgres (healthy) → migrate (completed) → backend (healthy) → frontend
+name: stockpilot
+
+x-database-url: &database-url postgresql+psycopg://stockpilot:${POSTGRES_PASSWORD:-stockpilot}@postgres:5432/stockpilot
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: stockpilot
+      POSTGRES_USER: stockpilot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stockpilot}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stockpilot -d stockpilot"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # One-shot job: apply Alembic migrations, then load demo data into an empty database.
+  migrate:
+    build: ./backend
+    image: stockpilot-backend:local
+    command: ["sh", "-c", "alembic upgrade head && python -m app.seed"]
+    environment:
+      DATABASE_URL: *database-url
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  backend:
+    build: ./backend
+    image: stockpilot-backend:local
+    environment:
+      DATABASE_URL: *database-url
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    image: stockpilot-frontend:local
+    environment:
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:8080"
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
