@@ -20,6 +20,19 @@ helm_install() {
     --values "$ROOT/$values" --wait --timeout 10m
 }
 
+echo "==> Preflight: inotify limits in the Docker VM"
+# kind needs more inotify instances than Docker VMs allow by default; otherwise kube-proxy
+# crash-loops with "too many open files" and Services stop routing.
+instances=$(docker run --rm alpine:3 cat /proc/sys/fs/inotify/max_user_instances)
+if [ "$instances" -lt 512 ]; then
+  cat >&2 <<EOF
+fs.inotify.max_user_instances is ${instances}; kind needs at least 512. Raise it, then re-run:
+  colima ssh -- sudo sysctl -w fs.inotify.max_user_instances=512      # Colima
+  docker run --rm --privileged alpine:3 sysctl -w fs.inotify.max_user_instances=512   # others
+EOF
+  exit 1
+fi
+
 echo "==> Helm repositories"
 helm repo add traefik https://traefik.github.io/charts --force-update >/dev/null
 helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/ --force-update >/dev/null

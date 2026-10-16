@@ -15,7 +15,3 @@ ports:
 ingressClass:
   enabled: true
   isDefaultClass: true
-
-logs:
-  access:
-    enabled: true
