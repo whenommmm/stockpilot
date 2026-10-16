@@ -1,0 +1,31 @@
+# Scenario 1 - ImagePullBackOff: the image tag does not exist in the registry.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lab-broken-image
+  namespace: stockpilot
+  labels:
+    lab: troubleshooting
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lab-broken-image
+  template:
+    metadata:
+      labels:
+        app: lab-broken-image
+        lab: troubleshooting
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: ghcr.io/whenommmm/stockpilot-backend:v9.9.9-does-not-exist
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]

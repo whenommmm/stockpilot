@@ -1,0 +1,55 @@
+# Scenario 3 - Running but never Ready: the readiness probe checks the wrong port.
+# nginx-unprivileged listens on 8080; the probe asks port 80, so the pod never receives traffic.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lab-broken-readiness
+  namespace: stockpilot
+  labels:
+    lab: troubleshooting
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lab-broken-readiness
+  template:
+    metadata:
+      labels:
+        app: lab-broken-readiness
+        lab: troubleshooting
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          image: nginxinc/nginx-unprivileged:1.30-alpine
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lab-broken-readiness
+  namespace: stockpilot
+  labels:
+    lab: troubleshooting
+spec:
+  selector:
+    app: lab-broken-readiness
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
