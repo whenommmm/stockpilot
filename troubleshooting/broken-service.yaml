@@ -1,0 +1,17 @@
+# Scenario 2 - Service with no endpoints: the selector doesn't match any pod's labels.
+# The real backend pods are labelled app.kubernetes.io/component=backend, not "api".
+apiVersion: v1
+kind: Service
+metadata:
+  name: lab-broken-service
+  namespace: stockpilot
+  labels:
+    lab: troubleshooting
+spec:
+  selector:
+    app.kubernetes.io/name: stockpilot
+    app.kubernetes.io/component: api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
