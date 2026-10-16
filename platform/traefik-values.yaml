@@ -15,3 +15,12 @@ ports:
 ingressClass:
   enabled: true
   isDefaultClass: true
+
+providers:
+  kubernetesIngress:
+    # Behind a NodePort there is no load-balancer address to copy into Ingress status. Publish
+    # 127.0.0.1 instead; Argo CD treats an Ingress without an address as still "Progressing".
+    publishedService:
+      enabled: false # would copy the NodePort Service's (empty) address and override the IP below
+    ingressEndpoint:
+      ip: 127.0.0.1

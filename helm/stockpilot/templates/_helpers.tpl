@@ -12,7 +12,10 @@
 helm.sh/chart: {{ printf "%s-%s" .root.Chart.Name .root.Chart.Version }}
 app.kubernetes.io/managed-by: {{ .root.Release.Service }}
 app.kubernetes.io/part-of: stockpilot
+{{- /* The database doesn't run our image: a version label would restart Postgres on every deploy. */}}
+{{- if ne .component "database" }}
 app.kubernetes.io/version: {{ .root.Values.imageTag | trunc 63 | quote }}
+{{- end }}
 {{ include "stockpilot.selectorLabels" . }}
 {{- end -}}
 
