@@ -32,3 +32,6 @@ crash.log
 .idea/
 .vscode/
 *.log
+
+# kind provider writes the cluster kubeconfig (with a client key) next to the Terraform files
+terraform/local/*-config

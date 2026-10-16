@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars to override the defaults (terraform.tfvars is git-ignored).
+# Never put AWS keys here: use `aws configure`, AWS_PROFILE or AWS SSO instead.
+aws_region          = "ap-south-1"
+environment         = "dev"
+cluster_name        = "stockpilot-eks"
+kubernetes_version  = "1.35"
+vpc_cidr            = "10.20.0.0/16"
+node_instance_types = ["t3.medium"]
+node_min_size       = 2
+node_desired_size   = 2
+node_max_size       = 4

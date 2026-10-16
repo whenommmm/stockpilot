@@ -1,0 +1,5 @@
+# Copy to terraform.tfvars to override the defaults (terraform.tfvars is git-ignored).
+cluster_name       = "stockpilot"
+worker_count       = 0
+ingress_http_port  = 8080
+ingress_https_port = 8443
