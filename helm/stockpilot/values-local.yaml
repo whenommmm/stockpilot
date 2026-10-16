@@ -2,7 +2,7 @@
 #
 # CI rewrites the imageTag line on every push to main (.github/workflows/ci-cd.yml, deploy job),
 # and Argo CD rolls the change out. Keep it a single top-level line.
-imageTag: "a452785ee64bc63c2bb57017099ecafeb626eb8a"
+imageTag: "84af426009eb43103934ed2e0356289c8f24693b"
 
 monitoring:
   serviceMonitor:
