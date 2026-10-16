@@ -1,0 +1,21 @@
+# Traefik is the cluster's ingress controller. (ingress-nginx, used by the course reference, was
+# retired by the Kubernetes project in March 2026 and no longer gets security fixes.)
+#
+# kind maps localhost:8080 -> node port 30080 (see terraform/local), so the entrypoints are
+# exposed on fixed NodePorts instead of a cloud LoadBalancer.
+service:
+  type: NodePort
+
+ports:
+  web:
+    nodePort: 30080
+  websecure:
+    nodePort: 30443
+
+ingressClass:
+  enabled: true
+  isDefaultClass: true
+
+logs:
+  access:
+    enabled: true

@@ -1,0 +1,75 @@
+{{- $fullname := include "stockpilot.fullname" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullname }}-backend
+  labels:
+    {{- include "stockpilot.labels" (dict "root" $ "component" "backend") | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.backend.replicas }}
+  {{- end }}
+  revisionHistoryLimit: 5
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0 # never drop below the current capacity during a rollout
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "stockpilot.selectorLabels" (dict "root" $ "component" "backend") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "stockpilot.labels" (dict "root" $ "component" "backend") | nindent 8 }}
+      annotations:
+        checksum/db-secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- include "stockpilot.podSecurityContext" (dict "uid" 10001) | nindent 8 }}
+      containers:
+        - name: backend
+          image: {{ include "stockpilot.image" (dict "root" $ "component" "backend") }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $fullname }}-db
+                  key: DATABASE_URL
+          # Readiness: only receive traffic when the database is reachable.
+          readinessProbe:
+            httpGet: { path: /ready, port: http }
+            periodSeconds: 5
+            failureThreshold: 3
+          # Liveness: restart only if the process itself is stuck (does not depend on the DB).
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          securityContext:
+            {{- include "stockpilot.containerSecurityContext" . | nindent 12 }}
+            readOnlyRootFilesystem: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullname }}-backend
+  labels:
+    {{- include "stockpilot.labels" (dict "root" $ "component" "backend") | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "stockpilot.selectorLabels" (dict "root" $ "component" "backend") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

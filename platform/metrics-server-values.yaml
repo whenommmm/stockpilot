@@ -1,0 +1,4 @@
+# metrics-server feeds CPU/memory usage to the HorizontalPodAutoscaler and `kubectl top`.
+# kind's kubelets use self-signed serving certificates, so skip verifying them (local only).
+args:
+  - --kubelet-insecure-tls

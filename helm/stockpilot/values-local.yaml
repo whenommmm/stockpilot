@@ -1,0 +1,13 @@
+# Local kind cluster, deployed by Argo CD (see k8s/argocd-application.yaml).
+#
+# CI rewrites the imageTag line on every push to main (.github/workflows/ci-cd.yml, deploy job),
+# and Argo CD rolls the change out. Keep it a single top-level line.
+imageTag: "dev"
+
+monitoring:
+  serviceMonitor:
+    enabled: true
+  prometheusRule:
+    enabled: true
+  grafanaDashboard:
+    enabled: true

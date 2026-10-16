@@ -1,0 +1,60 @@
+# Default values for the StockPilot chart. Environment-specific overrides live in values-<env>.yaml.
+
+# Images are ghcr.io/<owner>/stockpilot-backend:<imageTag> and ...-frontend:<imageTag>.
+# CI tags every image with the full Git commit SHA; "dev" is the tag used for locally built images.
+imageRegistry: ghcr.io/whenommmm
+imageTag: dev
+imagePullPolicy: IfNotPresent
+# Needed only if the GHCR packages are private, e.g. [{ name: ghcr-pull }]
+imagePullSecrets: []
+
+backend:
+  replicas: 2 # used only when autoscaling is disabled; otherwise the HPA owns the replica count
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+
+frontend:
+  replicas: 2
+  resources:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+postgres:
+  image: postgres:17-alpine
+  database: stockpilot
+  username: stockpilot
+  # Demo credential for a local cluster. In a real environment, use an external secret store
+  # (e.g. External Secrets Operator or Sealed Secrets) or a managed database such as Amazon RDS.
+  password: stockpilot-local
+  storage: 1Gi
+  storageClassName: "" # empty = the cluster's default StorageClass
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+
+migrations:
+  enabled: true
+  seed: true # load demo products into an empty database
+
+ingress:
+  enabled: true
+  className: traefik
+  host: stockpilot.localhost
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 60
+  scaleDownStabilizationSeconds: 60 # Kubernetes default is 300; shorter makes the demo visible
+
+monitoring:
+  # These need the Prometheus Operator CRDs (kube-prometheus-stack), so they are opt-in.
+  serviceMonitor:
+    enabled: false
+    interval: 15s
+  prometheusRule:
+    enabled: false
+  grafanaDashboard:
+    enabled: false

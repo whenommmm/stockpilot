@@ -1,0 +1,28 @@
+# GitOps: Argo CD renders helm/stockpilot with values-local.yaml from the main branch and keeps
+# the "stockpilot" namespace in sync with it. CI only changes Git; Argo CD changes the cluster.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: stockpilot
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/whenommmm/stockpilot.git
+    targetRevision: main
+    path: helm/stockpilot
+    helm:
+      releaseName: stockpilot
+      valueFiles:
+        - values-local.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: stockpilot
+  syncPolicy:
+    automated:
+      prune: true # delete resources that were removed from Git
+      selfHeal: true # undo manual changes made with kubectl
+    syncOptions:
+      - CreateNamespace=false # k8s/namespace.yaml owns the namespace and its security labels
