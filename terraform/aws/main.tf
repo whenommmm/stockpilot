@@ -5,7 +5,7 @@
 #   VPC 10.20.0.0/16
 #   ├── public subnets  (2 AZs)  internet gateway, NAT gateway, internet-facing load balancers
 #   └── private subnets (2 AZs)  EKS worker nodes, internal load balancers
-#         └── EKS control plane + managed node group (t3.medium x2, scales to 4)
+#         └── EKS control plane + managed node group (c7i-flex.large x2, scales to 4)
 
 data "aws_availability_zones" "available" {
   state = "available"

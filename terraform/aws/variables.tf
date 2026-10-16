@@ -29,9 +29,9 @@ variable "vpc_cidr" {
 }
 
 variable "node_instance_types" {
-  description = "Instance types for the managed node group."
+  description = "Instance types for the managed node group. c7i-flex.large (2 vCPU, 4 GiB) is Free Tier eligible; t3.medium is not."
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["c7i-flex.large"]
 }
 
 variable "node_min_size" {
