@@ -61,7 +61,7 @@ flowchart LR
 | Tests and quality | pytest (25 tests), ruff, Alembic drift check |
 | Containers | Multi-stage Dockerfiles, Docker Compose |
 | CI/CD | GitHub Actions, Trivy, GitHub Container Registry, Dependabot |
-| Infrastructure | Terraform: kind (local, applied) and AWS VPC + EKS (validated) |
+| Infrastructure | Terraform: kind (local) and AWS VPC + EKS (applied once, then destroyed) |
 | Kubernetes | Helm, Traefik Ingress, HPA, metrics-server, Pod Security "restricted" |
 | GitOps | Argo CD |
 | Observability | kube-prometheus-stack: Prometheus, Grafana, ServiceMonitor, PrometheusRule |
@@ -76,7 +76,7 @@ flowchart LR
 ├── .github/workflows/      CI/CD pipeline
 ├── terraform/
 │   ├── local/              kind cluster (applied)
-│   └── aws/                VPC + EKS (validated and tested, not applied)
+│   └── aws/                VPC + EKS (applied once on AWS, then destroyed)
 ├── k8s/                    Namespace + Argo CD Application
 ├── helm/stockpilot/        Helm chart (+ Grafana dashboard JSON)
 ├── platform/               Values for Traefik, metrics-server, Argo CD
@@ -159,7 +159,9 @@ See [`terraform/README.md`](terraform/README.md).
 - `terraform/aws` is the production-style design: VPC with 2 public + 2 private subnets across 2 AZs,
   a NAT gateway, an EKS cluster with a managed node group, the EBS CSI driver with a default gp3
   StorageClass, and metrics-server. It passes `terraform validate` and `terraform test`, which
-  plans it against a mocked AWS provider. It is **not applied**, so the project costs nothing.
+  plans it against a mocked AWS provider. It was also **applied for real** on an AWS Free plan
+  account in ap-south-1: 61 resources, EKS 1.35 with 2 `Ready` worker nodes. It was then
+  destroyed, and the free credits covered the cost.
 
 ## Kubernetes: from zero to running
 

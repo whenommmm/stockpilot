@@ -13,7 +13,8 @@ how to verify it, and the evidence the rubric asks for.
 - **Own domain.** TaskBoard is only an architectural reference. StockPilot has a different data
   model (products + stock movements), different API and different UI.
 - **Zero cloud spend.** Everything runs on a local [kind](https://kind.sigs.k8s.io/) cluster
-  created by Terraform. The AWS VPC + EKS code is written and validated, never applied.
+  created by Terraform. The AWS VPC + EKS stack was applied once on an AWS Free plan account (which
+  cannot be charged) to capture the evidence, then destroyed.
 - **Fix the reference's known bugs** (broken HCL, failing test, Compose start-up race, root
   nginx, hard-coded upstream, wrong Ingress service names, compromised Trivy action tag).
 - **GitOps deploys.** CI never talks to the cluster. It pushes images and commits the new image
@@ -50,7 +51,7 @@ how to verify it, and the evidence the rubric asks for.
 | M4 Docker | 10 | `*/Dockerfile`, `docker-compose.yml` | — |
 | M5 CI/CD | 15 | `.github/workflows/ci-cd.yml` | — |
 | M6 Trivy | 5 | same workflow | — |
-| M7 Terraform | 15 | `terraform/local`, `terraform/aws` | **~7 pts (VPC/EKS provisioned) lost by design** unless kind is accepted |
+| M7 Terraform | 15 | `terraform/local`, `terraform/aws` | — (VPC + EKS applied on an AWS Free plan account, then destroyed) |
 | M8 K8s + Helm | 15 | `k8s/`, `helm/stockpilot/` | — |
 | M9 Observability | 10 | `monitoring/`, ServiceMonitor, dashboard | — |
 | M10 Presentation | 5 | `README.md`, `docs/DEMO_SCRIPT.md` | — |
@@ -107,9 +108,9 @@ how to verify it, and the evidence the rubric asks for.
 
 - [x] `terraform/local`: kind cluster (`tehcyx/kind`), ports 8080/8443 → Traefik NodePorts
 - [x] `terraform/aws`: VPC (2 public + 2 private subnets, ELB tags, single NAT) + EKS (managed node
-      group, EBS CSI driver with default gp3 StorageClass, metrics-server) — validated + mock-tested only
+      group, EBS CSI driver with default gp3 StorageClass, metrics-server): validated, mock-tested, applied once and destroyed
 - [x] `terraform.tfvars.example` in both
-- **Evidence:** `init` / `plan` / `apply` / `destroy` of `local`; `validate` + `terraform test` of `aws`
+- **Evidence:** real AWS `plan` / `apply` / console / `destroy`; `validate` + `terraform test` of `aws`
 
 ## Phase 7 — Kubernetes + Helm (M8)
 

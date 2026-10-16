@@ -1,6 +1,7 @@
 # Production-style AWS infrastructure for StockPilot: a VPC across two availability zones and an
-# EKS cluster with one managed node group. Written and validated for the capstone, but not applied
-# (the project runs on a free local kind cluster instead, see ../local).
+# EKS cluster with one managed node group. Applied once on an AWS Free plan account (ap-south-1) to
+# verify it and capture the capstone evidence, then destroyed; day to day the project runs on the
+# free local kind cluster in ../local.
 #
 #   VPC 10.20.0.0/16
 #   ├── public subnets  (2 AZs)  internet gateway, NAT gateway, internet-facing load balancers

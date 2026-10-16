@@ -79,7 +79,8 @@ Save them in a folder, e.g. `evidence/`, named by module.
 
 **M7 Terraform**
 
-- [ ] `terraform plan` / `apply` / `destroy` for `terraform/local`
+- [ ] `terraform plan` / `apply` / `destroy` for `terraform/aws` (real AWS, ap-south-1)
+- [ ] AWS Console: VPC, subnets, EKS cluster (Active), node group (2 nodes)
 - [ ] `terraform validate` + `terraform test` for `terraform/aws`
 
 **M8 Kubernetes + Helm**
@@ -100,7 +101,5 @@ Save them in a folder, e.g. `evidence/`, named by module.
 - [ ] `README.md`
 - [ ] Live demo: commit → pipeline → deployment updates
 
-> **Note on M7:** the rubric awards points for a VPC and EKS cluster actually provisioned in AWS.
-> This project deliberately doesn't spend money, so it shows the AWS code passing `validate` and
-> `test`, and a real `apply`/`destroy` of the local cluster instead. Check with the instructor
-> whether that is accepted.
+> **Note on M7:** the AWS stack was applied on an AWS Free plan account, which cannot be charged,
+> then destroyed. All the screenshots are in the git-ignored `evidence/` folder.
