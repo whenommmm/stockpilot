@@ -1,0 +1,20 @@
+# Argo CD watches the Git repository and keeps the cluster in sync with helm/stockpilot.
+configs:
+  params:
+    # Plain HTTP behind Traefik on the local cluster (no TLS certificates locally).
+    server.insecure: true
+  cm:
+    # A webhook can't reach a laptop, so poll Git every minute instead of every 3 minutes.
+    timeout.reconciliation: 60s
+
+server:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hostname: argocd.localhost
+
+# Not needed locally: SSO and notifications.
+dex:
+  enabled: false
+notifications:
+  enabled: false

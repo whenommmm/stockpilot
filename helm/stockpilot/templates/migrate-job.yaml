@@ -1,0 +1,52 @@
+{{- if .Values.migrations.enabled }}
+{{- $fullname := include "stockpilot.fullname" . -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $fullname }}-migrate
+  labels:
+    {{- include "stockpilot.labels" (dict "root" $ "component" "migrate") | nindent 4 }}
+  annotations:
+    # Argo CD: run during sync, after the database (wave -2) is healthy and before the apps (wave 0).
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    # Plain `helm upgrade --install`: run once the release's resources exist.
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 10 # retries with back-off while Postgres is still starting
+  activeDeadlineSeconds: 600
+  template:
+    metadata:
+      labels:
+        {{- include "stockpilot.labels" (dict "root" $ "component" "migrate") | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- include "stockpilot.podSecurityContext" (dict "uid" 10001) | nindent 8 }}
+      containers:
+        - name: migrate
+          image: {{ include "stockpilot.image" (dict "root" $ "component" "backend") }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          command:
+            - sh
+            - -c
+            - alembic upgrade head{{ if .Values.migrations.seed }} && python -m app.seed{{ end }}
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $fullname }}-db
+                  key: DATABASE_URL
+          resources:
+            requests: { cpu: 50m, memory: 96Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          securityContext:
+            {{- include "stockpilot.containerSecurityContext" . | nindent 12 }}
+            readOnlyRootFilesystem: true
+{{- end }}

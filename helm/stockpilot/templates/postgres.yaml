@@ -1,0 +1,82 @@
+{{- $fullname := include "stockpilot.fullname" . -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullname }}-postgres
+  labels:
+    {{- include "stockpilot.labels" (dict "root" $ "component" "database") | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  selector:
+    {{- include "stockpilot.selectorLabels" (dict "root" $ "component" "database") | nindent 4 }}
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $fullname }}-postgres
+  labels:
+    {{- include "stockpilot.labels" (dict "root" $ "component" "database") | nindent 4 }}
+  annotations:
+    # Argo CD applies the database first and waits for it to be healthy (sync waves).
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  serviceName: {{ $fullname }}-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "stockpilot.selectorLabels" (dict "root" $ "component" "database") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "stockpilot.labels" (dict "root" $ "component" "database") | nindent 8 }}
+      annotations:
+        checksum/db-secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        {{- include "stockpilot.podSecurityContext" (dict "uid" 70) | nindent 8 }}
+        fsGroup: 70 # the "postgres" user in the Alpine image
+      containers:
+        - name: postgres
+          image: {{ .Values.postgres.image }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: {{ $fullname }}-db
+          env:
+            # A fresh volume can contain lost+found, and initdb refuses a non-empty directory.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"']
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"']
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          resources:
+            {{- toYaml .Values.postgres.resources | nindent 12 }}
+          securityContext:
+            {{- include "stockpilot.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- with .Values.postgres.storageClassName }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.postgres.storage }}

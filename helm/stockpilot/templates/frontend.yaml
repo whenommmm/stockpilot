@@ -1,0 +1,77 @@
+{{- $fullname := include "stockpilot.fullname" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullname }}-frontend
+  labels:
+    {{- include "stockpilot.labels" (dict "root" $ "component" "frontend") | nindent 4 }}
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  revisionHistoryLimit: 5
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "stockpilot.selectorLabels" (dict "root" $ "component" "frontend") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "stockpilot.labels" (dict "root" $ "component" "frontend") | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- include "stockpilot.podSecurityContext" (dict "uid" 101) | nindent 8 }}
+      containers:
+        - name: frontend
+          image: {{ include "stockpilot.image" (dict "root" $ "component" "frontend") }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            # nginx resolves this per request, so it needs the fully qualified Service name.
+            - name: BACKEND_URL
+              value: "http://{{ $fullname }}-backend.{{ .Release.Namespace }}.svc.cluster.local:8000"
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          securityContext:
+            {{- include "stockpilot.containerSecurityContext" . | nindent 12 }}
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            # The only writable paths: nginx temp files and the config rendered from the template.
+            - name: tmp
+              mountPath: /tmp
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: nginx-conf
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullname }}-frontend
+  labels:
+    {{- include "stockpilot.labels" (dict "root" $ "component" "frontend") | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "stockpilot.selectorLabels" (dict "root" $ "component" "frontend") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

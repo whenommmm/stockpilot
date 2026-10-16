@@ -1,0 +1,43 @@
+# kube-prometheus-stack: Prometheus Operator + Prometheus + Grafana + kube-state-metrics + node-exporter.
+# Installed by scripts/platform-up.sh into the "monitoring" namespace.
+
+grafana:
+  adminPassword: stockpilot # local demo only
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts: [grafana.localhost]
+  sidecar:
+    dashboards:
+      # Load dashboards from ConfigMaps labelled grafana_dashboard=1 in any namespace
+      # (the StockPilot chart ships one).
+      searchNamespace: ALL
+
+prometheus:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts: [prometheus.localhost]
+  prometheusSpec:
+    # Discover ServiceMonitors and PrometheusRules from every namespace and Helm release,
+    # not only the ones labelled with this release's name.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    retention: 2d
+    resources:
+      requests: { cpu: 100m, memory: 400Mi }
+
+# No notification channels locally; firing alerts are still visible in Prometheus.
+alertmanager:
+  enabled: false
+
+# kind's control-plane components only listen on localhost, so these targets would always be DOWN.
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeProxy:
+  enabled: false

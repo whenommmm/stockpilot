@@ -1,0 +1,6 @@
+StockPilot {{ .Values.imageTag }} is deployed to namespace {{ .Release.Namespace }}.
+{{ if .Values.ingress.enabled }}
+  App:       http://{{ .Values.ingress.host }}:8080
+  API docs:  http://{{ .Values.ingress.host }}:8080/docs
+{{ end }}
+  kubectl get pods,svc,ingress,hpa -n {{ .Release.Namespace }}
