@@ -11,7 +11,7 @@ ENV VITE_APP_VERSION=${APP_VERSION}
 RUN npm run build
 
 # ---- Runtime stage: static files served by nginx as a non-root user (UID 101) ----
-FROM nginxinc/nginx-unprivileged:1.30-alpine
+FROM nginxinc/nginx-unprivileged:1.31-alpine
 ARG APP_VERSION=dev
 LABEL org.opencontainers.image.title="stockpilot-frontend" \
       org.opencontainers.image.revision="${APP_VERSION}"
